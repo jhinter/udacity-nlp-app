@@ -1,23 +1,46 @@
-var path = require('path')
-const express = require('express')
-const mockAPIResponse = require('./mockAPI.js')
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
-const app = express()
+const dotenv = require("dotenv");
+dotenv.config();
 
-app.use(express.static('dist'))
+const aylien = require("aylien_textapi");
+const textapi = new aylien({
+  application_id: process.env.APP_ID,
+  application_key: process.env.API_KEY,
+});
 
-console.log(__dirname)
+const app = express();
 
-app.get('/', function (req, res) {
-    // res.sendFile('dist/index.html')
-    res.sendFile(path.resolve('src/client/views/index.html'))
-})
+// middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors());
 
-// designates what port the app will listen to for incoming requests
+app.use(express.static("dist"));
+
+app.post("/nlp", async (req, res) => {
+  console.log(req.body);
+  const { url } = req.body;
+  if (urlRegex.test(url)) {
+    textapi.sentiment({ url }, function (error, response) {
+      if (error === null) {
+        res.json(response);
+      } else {
+        res.status(500).send("Problems with api!");
+      }
+    });
+  } else {
+    res
+      .status(422)
+      .send("Missing parameters: Please provide url to article or blog post!");
+  }
+});
+
 app.listen(8080, function () {
-    console.log('Example app listening on port 8080!')
-})
+  console.log("Example app listening on port 8080!");
+});
 
-app.get('/test', function (req, res) {
-    res.send(mockAPIResponse)
-})
+const urlRegex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;

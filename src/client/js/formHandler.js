@@ -1,16 +1,25 @@
-function handleSubmit(event) {
-    event.preventDefault()
+import { fetchAnalysis } from "./fetchAnalysis";
 
-    // check what text was put into the form field
-    let formText = document.getElementById('name').value
-    checkForName(formText)
-
-    console.log("::: Form Submitted :::")
-    fetch('http://localhost:8080/test')
-    .then(res => res.json())
-    .then(function(res) {
-        document.getElementById('results').innerHTML = res.message
-    })
+// handles form submit
+async function handleSubmit(event) {
+  event.preventDefault();
+  try {
+    const url = document.getElementById("url").value;
+    const apiResponse = await fetchAnalysis(url);
+    updateUI(apiResponse);
+  } catch (error) {
+    alert(error);
+  }
 }
 
-export { handleSubmit }
+// updates ui with results from node backend
+function updateUI(apiResponse) {
+  const listElements = Object.keys(apiResponse).map((key) => {
+    if (key === "text") return;
+    return `<li><strong>${key}</strong>: ${apiResponse[key]}</li>`;
+  });
+  document.getElementById("results").innerHTML = listElements.join("");
+}
+
+export { handleSubmit, updateUI };
+
